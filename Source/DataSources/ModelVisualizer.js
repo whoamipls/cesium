@@ -121,6 +121,9 @@ ModelVisualizer.prototype.update = function (time) {
           defaultIncrementallyLoadTextures
         ),
         scene: this._scene,
+        // added by ray 20201010 : 设置汽车车身颜色
+        targetColor: modelGraphics._targetColor,
+        // =======================================
       });
       model.id = entity;
       primitives.add(model);

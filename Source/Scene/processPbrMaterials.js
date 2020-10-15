@@ -176,6 +176,16 @@ function generateTechnique(
   var parameterName;
   var value;
   var pbrMetallicRoughness = material.pbrMetallicRoughness;
+  // added by ray 20201010 : 设置汽车车身颜色
+  if (options.targetColor) {
+    pbrMetallicRoughness["targetColorFactor"] = [
+      options.targetColor.red,
+      options.targetColor.green,
+      options.targetColor.blue,
+      options.targetColor.alpha,
+    ];
+  }
+  // =======================================
   if (defined(pbrMetallicRoughness) && !useSpecGloss) {
     for (parameterName in pbrMetallicRoughness) {
       if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
@@ -222,6 +232,9 @@ function generateTechnique(
 
   var vertexShader = "precision highp float;\n";
   var fragmentShader = "precision highp float;\n";
+  // added by ray 20201010 : 设置汽车车身颜色
+  fragmentShader += "bool v_isTargetColor = true;\n";
+  // =======================================
 
   var skin;
   if (defined(gltf.skins)) {
@@ -804,6 +817,12 @@ function generateTechnique(
     }
   } else if (defined(generatedMaterialValues.u_baseColorFactor)) {
     fragmentShader += "    vec4 baseColorWithAlpha = u_baseColorFactor;\n";
+    // added by ray 20201010 : 设置汽车车身颜色
+    if (defined(generatedMaterialValues.u_targetColorFactor)) {
+      fragmentShader +=
+        "    v_isTargetColor = (baseColorWithAlpha == u_targetColorFactor ? true : false);\n";
+    }
+    // =======================================
   } else {
     fragmentShader += "    vec4 baseColorWithAlpha = vec4(1.0);\n";
   }
@@ -1183,6 +1202,10 @@ function getPBRValueType(paramName) {
   }
 
   switch (paramName) {
+    // added by ray 20201010 : 设置汽车车身颜色
+    case "u_targetColorFactor":
+      return WebGLConstants.FLOAT_VEC4;
+    // =======================================
     case "u_baseColorFactor":
       return WebGLConstants.FLOAT_VEC4;
     case "u_metallicFactor":

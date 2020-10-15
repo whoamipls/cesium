@@ -225,7 +225,11 @@ var uriToGuid = {};
  */
 function Model(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
+  // added by ray 20201010 : 设置汽车车身颜色
+  this.targetColor = options.targetColor
+    ? options.targetColor.getValue()
+    : undefined;
+  // =======================================
   var cacheKey = options.cacheKey;
   this._cacheKey = cacheKey;
   this._cachedGltf = undefined;
@@ -2386,6 +2390,25 @@ function modifyShaderForQuantizedAttributes(shader, programName, model) {
   return result.shader;
 }
 
+// added by ray 20201010 : 设置汽车车身颜色
+// ============== old_code ===============
+// function modifyShaderForColor(shader) {
+//   shader = ShaderSource.replaceMain(shader, "gltf_blend_main");
+//   shader +=
+//     "uniform vec4 gltf_color; \n" +
+//     "uniform float gltf_colorBlend; \n" +
+//     "void main() \n" +
+//     "{ \n" +
+//     "    gltf_blend_main(); \n" +
+//     "    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_color.rgb, gltf_colorBlend); \n" +
+//     "    float highlight = ceil(gltf_colorBlend); \n" +
+//     "    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n" +
+//     "    gl_FragColor.a *= gltf_color.a; \n" +
+//     "} \n";
+
+//   return shader;
+// }
+// ============== new_code ===============
 function modifyShaderForColor(shader) {
   shader = ShaderSource.replaceMain(shader, "gltf_blend_main");
   shader +=
@@ -2394,14 +2417,17 @@ function modifyShaderForColor(shader) {
     "void main() \n" +
     "{ \n" +
     "    gltf_blend_main(); \n" +
-    "    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_color.rgb, gltf_colorBlend); \n" +
-    "    float highlight = ceil(gltf_colorBlend); \n" +
-    "    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n" +
-    "    gl_FragColor.a *= gltf_color.a; \n" +
+    "    if (v_isTargetColor == true) { \n" +
+    "       gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_color.rgb, gltf_colorBlend); \n" +
+    "       float highlight = ceil(gltf_colorBlend); \n" +
+    "       gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n" +
+    "       gl_FragColor.a *= gltf_color.a; \n" +
+    "    } \n" +
     "} \n";
 
   return shader;
 }
+// ============= modify_end ==============
 
 function modifyShader(shader, programName, callback) {
   if (defined(callback)) {
@@ -5234,6 +5260,9 @@ Model.prototype.update = function (frameState) {
 
           var options = {
             addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders,
+            // added by ray 20201010 : 设置汽车车身颜色
+            targetColor: this.targetColor,
+            // =======================================
           };
 
           processModelMaterialsCommon(gltf, options);

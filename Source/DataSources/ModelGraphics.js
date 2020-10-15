@@ -234,6 +234,9 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),
+  // added by ray 20201010 : 设置汽车车身颜色
+  targetColor: createPropertyDescriptor("targetColor"),
+  // =======================================
 
   /**
    * Gets or sets the enum Property specifying how the color blends with the model.
@@ -333,6 +336,9 @@ ModelGraphics.prototype.clone = function (result) {
   result.silhouetteColor = this.silhouetteColor;
   result.silhouetteSize = this.silhouetteSize;
   result.color = this.color;
+  // added by ray 20201010 : 设置汽车车身颜色
+  result.targetColor = this.targetColor;
+  // =======================================
   result.colorBlendMode = this.colorBlendMode;
   result.colorBlendAmount = this.colorBlendAmount;
   result.imageBasedLightingFactor = this.imageBasedLightingFactor;
@@ -388,6 +394,9 @@ ModelGraphics.prototype.merge = function (source) {
     source.silhouetteSize
   );
   this.color = defaultValue(this.color, source.color);
+  // added by ray 20201010 : 设置汽车车身颜色
+  this.targetColor = defaultValue(this.targetColor, source.targetColor);
+  // =======================================
   this.colorBlendMode = defaultValue(
     this.colorBlendMode,
     source.colorBlendMode
