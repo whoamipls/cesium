@@ -19,6 +19,10 @@ import SkyBoxFS from "../Shaders/SkyBoxFS.js";
 import SkyBoxVS from "../Shaders/SkyBoxVS.js";
 import BlendingState from "./BlendingState.js";
 import SceneMode from "./SceneMode.js";
+// added by ray 20201015 : 近地天空盒
+import Transforms from "../Core/Transforms";
+import Matrix3 from "../Core/Matrix3";
+// =================================
 
 /**
  * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
@@ -62,6 +66,9 @@ function SkyBox(options) {
    */
   this.sources = options.sources;
   this._sources = undefined;
+  // added by ray 20201015 : 近地天空盒
+  this.nearGround = options.nearGround;
+  // =================================
 
   /**
    * Determines if the sky box will be shown.
@@ -166,6 +173,16 @@ SkyBox.prototype.update = function (frameState, useHdr) {
       u_cubeMap: function () {
         return that._cubeMap;
       },
+      // added by ray 20201015 : 近地天空盒
+      u_rotateMatrix: function () {
+        return that.nearGround
+          ? ((command.modelMatrix = Transforms.eastNorthUpToFixedFrame(
+              frameState.camera._positionWC
+            )),
+            Matrix4.getMatrix3(command.modelMatrix, new Matrix3()))
+          : Matrix3.IDENTITY;
+      },
+      // =================================
     };
 
     var geometry = BoxGeometry.createGeometry(
