@@ -1,3 +1,4 @@
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <p align="center">
 <img src="https://github.com/CesiumGS/cesium/wiki/logos/Cesium_Logo_Color.jpg" width="50%" />
 </p>
@@ -61,3 +62,10 @@ Using Cesium ion helps support CesiumJS development. :heart:
 <br/>
 </p>
 <h4><a href="https://cesium.com/blog/categories/userstories">See all demos</a></h4>
+<p>
+https://blog.csdn.net/weixin_30444105/article/details/97071414?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~sobaiduend~default-1-97071414.nonecase&utm_term=cesium%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91&spm=1000.2123.3001.4430
+cesium源代码编译步骤：
+(1) cnpm install
+(2) cnpm install gulp -g //生成文档需要 cnpm install jsdoc -g
+(3) gulp minifyRelease
+</p>
