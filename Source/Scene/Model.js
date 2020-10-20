@@ -2390,7 +2390,7 @@ function modifyShaderForQuantizedAttributes(shader, programName, model) {
   return result.shader;
 }
 
-// added by ray 20201010 : 设置汽车车身颜色
+// modified by ray 20201010 : 设置汽车车身颜色
 // ============== old_code ===============
 // function modifyShaderForColor(shader) {
 //   shader = ShaderSource.replaceMain(shader, "gltf_blend_main");

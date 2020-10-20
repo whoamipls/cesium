@@ -403,7 +403,12 @@ function repositionAllGlyphs(label) {
   var lineIndex = 0;
   var lineWidth = lineWidths[lineIndex];
   var widthOffset = calculateWidthOffset(
-    lineWidth,
+    // modified by ray 20201020 : label内容左对齐
+    // ============== old_code ===============
+    // lineWidth,
+    // ============== new_code ===============
+    maxLineWidth,
+    // ============= modify_end ==============
     horizontalOrigin,
     backgroundPadding
   );
@@ -433,7 +438,12 @@ function repositionAllGlyphs(label) {
       lineOffsetY += lineSpacing;
       lineWidth = lineWidths[lineIndex];
       widthOffset = calculateWidthOffset(
-        lineWidth,
+        // modified by ray 20201017 : label内容左对齐
+        // ============== old_code ===============
+        // lineWidth,
+        // ============== new_code ===============
+        maxLineWidth,
+        // ============= modify_end ==============
         horizontalOrigin,
         backgroundPadding
       );
