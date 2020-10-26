@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8" />
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>Hello World!</title>
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+      @import url(../Build/Cesium/Widgets/widgets.css);
+
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="cesiumContainer"></div>
+    <script>
+      var viewer = new Cesium.Viewer("cesiumContainer");
+      viewer.scene.fxaa = false;
+      viewer.scene.postProcessStages.fxaa.enabled = false;
+      viewer.scene.globe.maximumScreenSpaceError = 4 / 3;
+      var lng = 116,
+        lat = 39;
+      var position = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
+      var entity = viewer.entities.add({
+        position: position,
+        point: {
+          pixelSize: 5,
+        },
+        label: {
+          text:
+            "京Q6TN26\nHello1234567890\nHello1234567890987654321\nHello\nHello1234567890987654321012345",
+          style: Cesium.LabelStyle.FILL,
+          fillColor: Cesium.Color.WHITE,
+          backgroundColor: Cesium.Color.BLUE,
+          showBackground: true,
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          font: "15px LCD",
+          // font: "15px Helvetica",
+          // font: "15px sans-serif",
+          scale: 1.0,
+          // eyeOffset: new Cesium.Cartesian3(0.0, 2.0, 0.0),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+      });
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(lng, lat, 20),
+      });
+    </script>
+  </body>
+</html>

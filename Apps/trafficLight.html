@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8" />
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>Traffic Light</title>
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+      @import url(../Build/Cesium/Widgets/widgets.css);
+
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="cesiumContainer"></div>
+    <script>
+      var viewer = new Cesium.Viewer("cesiumContainer");
+      // 隐藏地球
+      viewer.imageryLayers.removeAll();
+      viewer.scene.skyAtmosphere.show = false; // 大气层
+      viewer.scene.globe.baseColor = Cesium.Color.TRANSPARENT; //new Cesium.Color(0, 0, 0, 0);
+      viewer.scene.frameState.globeTransparent = true; // 地球透明
+      // 路口场景
+      var lng = 116.503448,
+        lat = 39.762848;
+      var tileset = viewer.scene.primitives.add(
+        new Cesium.Cesium3DTileset({
+          url: "assets/tileset/crossroads/bright/whole/tileset.json",
+        })
+      );
+      // 相机定位
+      initCamera();
+      // 相机移动结束事件
+      viewer.scene.camera.moveEnd.addEventListener(() => {
+        var initPos = Cesium.Cartesian3.fromDegrees(lng, lat);
+        var camPos = viewer.scene.camera.position;
+        var distance = Cesium.Cartesian3.distance(initPos, camPos);
+        if (distance >= 1800) {
+          initCamera();
+        }
+      });
+      // 初始化相机
+      function initCamera() {
+        viewer.camera.lookAt(
+          Cesium.Cartesian3.fromDegrees(lng, lat, 0),
+          new Cesium.HeadingPitchRange(
+            Cesium.Math.toRadians(0),
+            Cesium.Math.toRadians(-20),
+            100
+          )
+        );
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+      }
+      // 信号灯类
+      function TrafficLight(map3d, options) {
+        this.map3d = map3d;
+        // 位置和姿态矩阵
+        var position = Cesium.Cartesian3.fromDegrees(
+          options.position.lng,
+          options.position.lat,
+          options.position.alt
+        );
+        if (options.rotation) {
+          var hpr = Cesium.HeadingPitchRoll.fromDegrees(
+            options.rotation.heading,
+            options.rotation.pitch,
+            options.rotation.roll
+          );
+          options.modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+            position,
+            hpr
+          );
+        } else {
+          options.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+            position
+          );
+        }
+        // 加载gltf
+        this.model = Cesium.Model.fromGltf(options);
+        var primi = map3d.scene.primitives.add(this.model);
+        console.log(this.model, primi);
+        // 红绿黄材质
+        //this.lightMats = ['13___Default', '14___Default', '15___Default'];
+        this.lightMats = ["red", "yellow", "green"];
+        // 红绿黄颜色
+        this.lightColors = [
+          Cesium.Cartesian3.UNIT_X,
+          new Cesium.Cartesian3(1, 1, 0),
+          Cesium.Cartesian3.UNIT_Y,
+        ];
+        this.blackColor = new Cesium.Cartesian4(0.0, 0.0, 0.0, 1.0);
+      }
+      // 设置信号灯状态
+      TrafficLight.prototype.setStatus = function (idx) {
+        for (var i = 0; i < this.lightMats.length; i++) {
+          var name = this.lightMats[i];
+          var color = this.lightColors[i];
+          this.model
+            .getMaterial(name)
+            .setValue("baseColorFactor", i == idx ? color : this.blackColor);
+        }
+      };
+      // 创建信号灯
+      var light = new TrafficLight(viewer, {
+        url: "assets/model/trafficlight/HLD.gltf",
+        position: { lng: lng, lat: lat, alt: 3 },
+        rotation: { heading: 0, pitch: 0, roll: 0 },
+      });
+      // 设置信号灯状态
+      setInterval(() => {
+        light.setStatus(new Date().getSeconds() % 3);
+      }, 1000);
+    </script>
+  </body>
+</html>

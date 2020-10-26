@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8" />
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>tileset</title>
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+      @import url(../Build/Cesium/Widgets/widgets.css);
+
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="cesiumContainer"></div>
+    <script>
+      var viewer = new Cesium.Viewer("cesiumContainer", {
+        imageryProvider: new Cesium.SingleTileImageryProvider({
+          url: "./assets/images/world.jpg",
+        }),
+      });
+      var scene = viewer.scene;
+      scene.globe.show = true; // 地球模型
+      scene.sun.show = false; // 隐藏太阳
+      scene.globe.enableLighting = false;
+      scene.skyAtmosphere.show = false; // 大气层
+      // 环境光
+      scene.light.color = new Cesium.Color(1, 1, 1, 1);
+      scene.light.intensity = 5;
+
+      console.log(scene.globe);
+      var tileset = new Cesium.Cesium3DTileset({
+        url: "./assets/tileset/tileset.json",
+      });
+      scene.primitives.add(tileset);
+      viewer.zoomTo(tileset);
+      var stages = viewer.scene.postProcessStages;
+      viewer.scene.brightness =
+        viewer.scene.brightness ||
+        stages.add(Cesium.PostProcessStageLibrary.createBrightnessStage());
+      viewer.scene.brightness.enabled = true;
+      viewer.scene.brightness.uniforms.brightness = Number(1.5);
+      // 添加光源
+      // var pointLightPos = new Cesium.Cartesian3(-2190988.5516956383, 4393637.094026521, 4057731.6756103504); //new Cesium.Cartesian3.fromDegrees(116.45976565628527, 39.91042009316276, 80.0);
+      // var pointLightOptions = {
+      // 	cutoffDistance: 360.0,
+      // 	color: new Cesium.Color(0.15, 0.45, 1.4, 1.0),
+      // 	intensity: 0.12
+      // };
+      // var pointLight = new Cesium.PointLight(pointLightPos, pointLightOptions);
+      // scene.addLightSource(pointLight);
+      // 鼠标拾取
+      var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      handler.setInputAction(function (movement) {
+        var position = scene.pickPosition(movement.position);
+        console.log(position);
+        // var ray = viewer.camera.getPickRay(movement.position);
+        // var position = tileset.pick(ray, viewer.scene);
+        // console.log(position);
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    </script>
+  </body>
+</html>

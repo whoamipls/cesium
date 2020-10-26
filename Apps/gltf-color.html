@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%; height: 100%; overflow: hidden">
+  <head>
+    <meta charset="utf-8" />
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <!--script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script-->
+  </head>
+
+  <body style="width: 100%; height: 100%">
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script>
+      Cesium.Ion.defaultAccessToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyOGQ5YjY1NS00YTVlLTQyOTEtYjE4NC00NDI4Yzc1ODc1MWEiLCJpZCI6MjczNDAsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1ODkzNDg5MjR9.CE_RnChAMGGpf10DLoY5sAXObLxGiwnTkMYQ1DBRp24";
+      var viewer = new Cesium.Viewer("cesiumContainer", {
+        shouldAnimate: true,
+        animation: true, //是否显示动画控件
+        baseLayerPicker: false, //是否显示图层选择控件
+        geocoder: false, //是否显示地名查找控件
+        timeline: false, //是否显示时间线控件
+        sceneModePicker: false, //是否显示投影方式控件
+        navigationHelpButton: false, //是否显示帮助信息控件
+        infoBox: false, //是否显示点击要素之后显示的信息
+        homeButton: false,
+        fullscreenButton: false, //全屏按钮不显示
+      });
+      // viewer.scene.globe.show = false;
+      if (Cesium.FeatureDetection.supportsImageRenderingPixelated()) {
+        //判断是否支持图像渲染像素化处理
+        viewer.resolutionScale = window.devicePixelRatio;
+      }
+      viewer.scene.fxaa = true;
+      viewer.scene.postProcessStages.fxaa.enabled = true;
+      viewer._cesiumWidget._creditContainer.style.display = "none";
+      var lng = 116.503448,
+        lat = 39.762848;
+      // 通过entities添加gltf
+      function addEntity(viewer, url, lng, lat) {
+        var position = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
+        var heading = Cesium.Math.toRadians(0),
+          pitch = 0,
+          roll = 0;
+        var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+        var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+          position,
+          hpr
+        );
+        entity = viewer.entities.add({
+          name: url,
+          position: position,
+          orientation: orientation,
+          model: {
+            uri: url,
+            scale: 1,
+            maximumScale: 100,
+            runAnimations: false,
+            targetColor: Cesium.Color.fromCartesian4(
+              new Cesium.Cartesian4(0.8431, 0.8431, 0.8431, 1)
+            ),
+            color: Cesium.Color.BLUE,
+          },
+        });
+        return entity;
+      }
+      var names = [
+        "301",
+        "car1",
+        "car2",
+        "car3",
+        "car4",
+        "car5",
+        "car6",
+        "car7",
+        "car8",
+        "car9",
+        "car10",
+        "car11",
+        "car12",
+        "car13",
+        "car14",
+        "car15",
+        "car16",
+        "car17",
+        "car18",
+        "car19",
+        "car20",
+        "car201",
+      ];
+      for (var i = 0; i < names.length; i++) {
+        var name = names[i];
+        var url = `./assets/model/car/${name}.gltf`;
+        addEntity(viewer, url, lng + parseFloat(i / 10000.0), lat);
+      }
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(lng, lat, 20),
+      });
+    </script>
+    }
+  </body>
+</html>
