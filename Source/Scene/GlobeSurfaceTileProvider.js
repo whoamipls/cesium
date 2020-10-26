@@ -2596,7 +2596,12 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       surfaceTile.vertexArray || surfaceTile.fill.vertexArray;
     command.count = count;
     command.uniformMap = uniformMap;
-    command.pass = Pass.GLOBE;
+    // modified by ray 20201023 : 设置地球透明
+    // ============== old_code ===============
+    //command.pass = Pass.GLOBE;
+    // ============== new_code ===============
+    command.pass = frameState.globeTransparent ? Pass.TRANSLUCENT : Pass.GLOBE;
+    // ============= modify_end ==============
 
     if (tileProvider._debug.wireframe) {
       createWireframeVertexArrayIfNecessary(context, tileProvider, tile);
