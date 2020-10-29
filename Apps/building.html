@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8" />
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>Building</title>
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+      @import url(../Build/Cesium/Widgets/widgets.css);
+
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="cesiumContainer"></div>
+    <script>
+      var viewer = new Cesium.Viewer("cesiumContainer", {
+        imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+          url:
+            "http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer",
+        }),
+      });
+      // 背景黑色
+      // viewer.imageryLayers.removeAll();// 清空影像层
+      // viewer.scene.skyAtmosphere.show = false;// 关闭气层
+      // viewer.scene.globe.baseColor = Cesium.Color.BLACK;
+      // 位置
+      var url = "./assets/geojson/buildings-hf.json";
+      var color = Cesium.Color.DARKBLUE.withAlpha(0.95); //Cesium.Color.fromCssColorString('#0000ee66');
+      var lng = 112.5458279030155,
+        lat = 37.87312604443767;
+      // 设置相机
+      viewer.camera.lookAt(
+        Cesium.Cartesian3.fromDegrees(lng, lat, 0),
+        new Cesium.HeadingPitchRange(
+          Cesium.Math.toRadians(-45),
+          Cesium.Math.toRadians(-45),
+          3000
+        )
+      );
+      viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+      if (1) {
+        // 加载建筑白模
+        var promise = Cesium.GeoJsonDataSource.load(url);
+        promise.then(function (dataSource) {
+          var entities = dataSource.entities.values;
+          var instances = [];
+          for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            var height = Number(entity.properties.floor.getValue()) * 3.5;
+            instances.push(
+              createInstance(
+                entity.polygon.hierarchy._value.positions,
+                "cus" + i,
+                height
+              )
+            );
+          }
+          // 外观
+          var appearance = new Cesium.PerInstanceColorAppearance();
+          // 材质
+          var scale = 0,
+            step = 0.01;
+          viewer.scene.postRender.addEventListener((s, t) => {
+            scale += step;
+            if (scale <= 0 || scale >= 1.0) {
+              step *= -1;
+            }
+          });
+          var material = new Cesium.Material({});
+          material._uniforms["scale"] = function () {
+            return scale;
+          };
+          // 着色器
+          var vs =
+            "\n\
+				attribute vec3 position3DHigh;\n\
+				attribute vec3 position3DLow;\n\
+				attribute float batchId;\n\
+				\n\
+				varying vec4 v_position;\n\
+				void main()\n\
+				{\n\
+					vec4 p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n\
+					p = czm_modelViewProjectionRelativeToEye * p;\n\
+					gl_Position = p;\n\
+					v_position = p;\n\
+					vec4 position = czm_modelViewProjectionRelativeToEye *czm_computePosition();\n\
+					gl_Position = position;\n\
+				}";
+          var fs =
+            "\n\
+					uniform float scale;\n\
+					varying vec4 v_position;\n\
+					void main(){\n\
+						gl_FragColor= v_position[1] > 50.0 ? vec4(1.0,0,0,0.8) * scale : vec4(0,1.0,0,0.8);\n\
+					}";
+          // 外观
+          appearance = new Cesium.EllipsoidSurfaceAppearance({
+            material: material,
+            vertexShaderSource: vs,
+            fragmentShaderSource: fs,
+          });
+
+          var primitive = new Cesium.Primitive({
+            geometryInstances: instances,
+            appearance: appearance,
+          });
+          viewer.scene.primitives.add(primitive);
+        });
+        function createInstance(cartesians, id, height) {
+          var polygon = new Cesium.PolygonGeometry({
+            polygonHierarchy: new Cesium.PolygonHierarchy(cartesians),
+            extrudedHeight: height, //Math.ceil(Math.random() * 40 + 10)
+          });
+          var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+          var instance = new Cesium.GeometryInstance({
+            geometry: geometry,
+            attributes: {
+              color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                Cesium.Color.MIDNIGHTBLUE.withAlpha(0.95)
+              ),
+            },
+            id: id,
+          });
+          return instance;
+        }
+      } else {
+        // 加载三维模型灰模
+        var promise = Cesium.GeoJsonDataSource.load(url);
+        promise.then(function (dataSource) {
+          viewer.dataSources.add(dataSource);
+          var entities = dataSource.entities.values;
+          for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            var name = entity.name;
+            var height = Number(entity.properties.floor.getValue());
+            entity.polygon.material = height < 10 ? color : Cesium.Color.RED; //Cesium.Color.fromRandom({ alpha: 1.0, });//Cesium.Color.BLUE.withAlpha(0.9); //color;
+            entity.polygon.outline = false;
+            entity.polygon.extrudedHeight = height; //5 + Math.random() * 100;
+          }
+        });
+        viewer.zoomTo(promise);
+      }
+      // 鼠标左键单击事件
+      var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      handler.setInputAction((event) => {
+        var cartesian = viewer.camera.pickEllipsoid(
+          event.position,
+          viewer.scene.globe.ellipsoid
+        );
+        var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        var lng = Cesium.Math.toDegrees(cartographic.longitude);
+        var lat = Cesium.Math.toDegrees(cartographic.latitude);
+        console.log(lng, lat);
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    </script>
+  </body>
+</html>

@@ -92,7 +92,13 @@
         addEntity(viewer, url, lng + parseFloat(i / 10000.0), lat);
       }
       viewer.camera.flyTo({
+        //setView
         destination: Cesium.Cartesian3.fromDegrees(lng, lat, 20),
+        orientation: {
+          heading: Cesium.Math.toRadians(0),
+          pitch: Cesium.Math.toRadians(-90),
+          roll: Cesium.Math.toRadians(90),
+        },
       });
     </script>
     }
