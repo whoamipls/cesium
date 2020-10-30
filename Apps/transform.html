@@ -1,0 +1,162 @@
+<!--
+ * @Author: your name
+ * @Date: 2020-10-30 13:54:38
+ * @LastEditTime: 2020-10-30 16:13:12
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \Apps\transform.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8" />
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>Transform</title>
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+      @import url(../Build/Cesium/Widgets/widgets.css);
+
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="cesiumContainer"></div>
+    <script>
+      var viewer = new Cesium.Viewer("cesiumContainer");
+      // var matrix = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(116, 39));
+      // console.log(matrix);
+      // 路口场景
+      var lng = 116.503847962007,
+        lat = 39.7626923017787;
+      var files = ["jz/tileset.json", "other/tileset.json"];
+      files.forEach((file) => {
+        var tileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: `assets/tileset/crossroads/dark/layer/${file}`,
+          })
+        );
+      });
+      // var tileset = viewer.scene.primitives.add(
+      // 	new Cesium.Cesium3DTileset({
+      // 		url: "assets/tileset/crossroads/bright/whole/tileset.json",
+      // 	})
+      // );
+      initCamera();
+      // 初始化相机
+      function initCamera() {
+        viewer.camera.lookAt(
+          Cesium.Cartesian3.fromDegrees(lng, lat, 0),
+          new Cesium.HeadingPitchRange(
+            Cesium.Math.toRadians(0),
+            Cesium.Math.toRadians(-20),
+            100
+          )
+        );
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+      }
+      // 竖杆
+      var height = 6.796,
+        heading = 196.6;
+      var position = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
+      var hpr = Cesium.HeadingPitchRoll.fromDegrees(heading, 0, 0);
+      var model = Cesium.Model.fromGltf({
+        url: `assets/model/trafficlight/GZ01_S.gltf`,
+        modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+          position,
+          hpr
+        ),
+      });
+      viewer.scene.primitives.add(model);
+      // 横杆
+      var position = Cesium.Cartesian3.fromDegrees(lng, lat, height);
+      var hpr = Cesium.HeadingPitchRoll.fromDegrees(heading, 0, 0);
+      var model = Cesium.Model.fromGltf({
+        url: `assets/model/trafficlight/GZ02_H1.gltf`,
+        modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+          position,
+          hpr
+        ),
+        scale: 1.5,
+      });
+      viewer.scene.primitives.add(model);
+      // 红绿灯1
+      var position = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
+      var hpr = Cesium.HeadingPitchRoll.fromDegrees(heading, 0, 0);
+      var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+        position,
+        hpr
+      );
+      // let rotationM = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(30));
+      // modelMatrix = Cesium.Matrix4.multiplyByMatrix3(modelMatrix, rotationM, new Cesium.Matrix4());
+      var tm4 = Cesium.Matrix4.fromTranslation(
+        new Cesium.Cartesian3(0.15, -6.5, height)
+      );
+      modelMatrix = Cesium.Matrix4.multiply(
+        modelMatrix,
+        tm4,
+        new Cesium.Matrix4()
+      );
+      var model = Cesium.Model.fromGltf({
+        url: `assets/model/trafficlight/HLD.gltf`,
+        modelMatrix: modelMatrix,
+      });
+      viewer.scene.primitives.add(model);
+      // 红绿灯2
+      var position = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
+      var hpr = Cesium.HeadingPitchRoll.fromDegrees(heading, 0, 0);
+      var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+        position,
+        hpr
+      );
+      var tm4 = Cesium.Matrix4.fromTranslation(
+        new Cesium.Cartesian3(0.15, -9.5, height)
+      );
+      modelMatrix = Cesium.Matrix4.multiply(
+        modelMatrix,
+        tm4,
+        new Cesium.Matrix4()
+      );
+      var model = Cesium.Model.fromGltf({
+        url: `assets/model/trafficlight/HLD.gltf`,
+        modelMatrix: modelMatrix,
+      });
+      viewer.scene.primitives.add(model);
+      // 计时器
+      var position = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
+      var hpr = Cesium.HeadingPitchRoll.fromDegrees(heading, 0, 0);
+      var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+        position,
+        hpr
+      );
+      var tm4 = Cesium.Matrix4.fromTranslation(
+        new Cesium.Cartesian3(0.15, -8.5, height)
+      );
+      modelMatrix = Cesium.Matrix4.multiply(
+        modelMatrix,
+        tm4,
+        new Cesium.Matrix4()
+      );
+      var model = Cesium.Model.fromGltf({
+        url: `assets/model/trafficlight/JSQ.gltf`,
+        modelMatrix: modelMatrix,
+      });
+      viewer.scene.primitives.add(model);
+    </script>
+  </body>
+</html>

@@ -10,7 +10,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <title>Building</title>
+    <title>Building2</title>
     <script src="../Build/Cesium/Cesium.js"></script>
     <style>
       @import url(../Build/Cesium/Widgets/widgets.css);
@@ -36,10 +36,13 @@
             "http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer",
         }),
       });
-      // 背景黑色
-      // viewer.imageryLayers.removeAll();// 清空影像层
-      // viewer.scene.skyAtmosphere.show = false;// 关闭气层
-      // viewer.scene.globe.baseColor = Cesium.Color.BLACK;
+      // 抗锯齿
+      if (Cesium.FeatureDetection.supportsImageRenderingPixelated()) {
+        //判断是否支持图像渲染像素化处理
+        viewer.resolutionScale = window.devicePixelRatio;
+      }
+      viewer.scene.fxaa = true;
+      viewer.scene.postProcessStages.fxaa.enabled = true;
       // 位置
       var url = "./assets/geojson/hefei.json";
       var color = Cesium.Color.DARKBLUE.withAlpha(0.95); //Cesium.Color.fromCssColorString('#0000ee66');
@@ -77,91 +80,38 @@
           // 外观
           var appearance = new Cesium.PerInstanceColorAppearance();
           // 材质
-          var scale = 0,
-            step = 0.01;
+          var offset = 0,
+            step = 0.5;
           viewer.scene.postRender.addEventListener((s, t) => {
-            scale += step;
-            if (scale <= 0 || scale >= 1.0) {
+            offset += step;
+            if (offset <= -20 || offset >= 100) {
               step *= -1;
             }
           });
           var material = new Cesium.Material({});
-          material._uniforms["scale"] = function () {
-            return scale;
+          material._uniforms["radius"] = function () {
+            return 6372226 + offset;
           };
-          // 着色器
-          // var vs =
-          // 	"\n\
-          // attribute vec3 position3DHigh;\n\
-          // attribute vec3 position3DLow;\n\
-          // attribute float batchId;\n\
-          // \n\
-          // varying vec3 v_positionMC;//顶点模型坐标传递到fs \n\
-          // varying vec3 v_positionWC;//顶点世界坐标传递到fs \n\
-          // varying vec2 v_st;//顶点纹理坐标传递到fs\n\
-          // void main()\n\
-          // {\n\
-          // 	vec4 p = czm_computePosition();\n\
-          // 	v_positionMC = position3DHigh + position3DLow;//模型坐标\n\
-          // 	v_positionWC = (czm_model * v_positionMC).xyz; //计算世界坐标\n\
-          // 	gl_Position = czm_modelViewProjectionRelativeToEye * p;\n\
-          // }";
-          // var fs = "\n\
-          // 	precision highp float;\n\
-          // 	uniform float scale;\n\
-          // 	varying vec3 v_positionMC;\n\
-          // 	varying vec3 v_positionWC;\n\
-          // 	void main(){\n\
-          // 		gl_FragColor= v_positionMC.z > 3343450.0 ? vec4(1.0,0,0,0.8) * scale : vec4(0,1.0,0,0.8);\n\
-          // 	}";
-          // var vs = "\n\
-          // 	attribute vec3 position3DHigh;\n\
-          // 	attribute vec3 position3DLow;\n\
-          // 	attribute float batchId;\n\
-          // 	attribute vec3 a_position;\n\
-          // 	varying vec4 v_positionEC;\n\
-          // 	varying vec3 pos;\n\
-          // 	void main() {\n\
-          // 		vec4 p = czm_computePosition();\n\
-          // 		v_positionEC = czm_modelViewRelativeToEye * p;\n\
-          // 		pos = a_position;\n\
-          // 		gl_Position = czm_modelViewProjectionRelativeToEye * p; \n\
-          // 	}\n\
-          // ";
-          // var fs = "\n\
-          // 	precision highp float;\n\
-          // 	uniform float scale;\n\
-          // 	varying vec3 pos;\n\
-          // 	void main(){\n\
-          // 		gl_FragColor = pos.x > 0.0 ? vec4(0,1,0,1) : vec4(1.0,0,0,0.8) * scale;\n\
-          // 	}";
           var vs =
             "\n\
 					attribute vec3 position3DHigh;\n\
 					attribute vec3 position3DLow;\n\
 					attribute float batchId;\n\
 					attribute vec3 a_position;\n\
-					varying vec3 v_positionMC;\n\
 					varying float dist;\n\
-					varying vec4 v_color;\n\
 					void main() {\n\
 						vec4 p = czm_computePosition();\n\
 						gl_Position = czm_modelViewProjectionRelativeToEye * p; \n\
-						v_positionMC = position3DHigh + position3DLow;//模型坐标\n\
-						dist = distance(vec3(0,0,0), v_positionMC);\n\
-						v_color = dist > 6372226.0355235785 ? vec4(1,0,0,1) : vec4(0,1,0,1);\n\
+						dist = distance(vec3(0,0,0), position3DHigh + position3DLow);\n\
 					}\n\
 				";
           var fs =
             "\n\
 					precision highp float;\n\
-					uniform float scale;\n\
-					varying vec4 v_color;\n\
+					uniform float radius;\n\
 					varying float dist;\n\
 					void main(){\n\
-						gl_FragColor = vec4(1.0,0,0,0.8) * scale;\n\
-						gl_FragColor = v_color;\n\
-						// gl_FragColor = dist > 6372226.0355235785 ? vec4(1,0,0,1) : vec4(0,1,0,1);\n\
+						gl_FragColor = abs(dist-radius) < 1.0 ? vec4(1,1,0,1) : vec4(0,0,0.7,1);\n\
 					}";
           // 外观
           appearance = new Cesium.EllipsoidSurfaceAppearance({
