@@ -4347,6 +4347,21 @@ Scene.prototype.cartesianToCanvasCoordinates = function (position, result) {
   return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
 };
 
+// added by ray 20201030 : 真实坐标转窗口坐标
+Scene.prototype.cartesianWithEyeOffsetToCanvasCoordinates = function (
+  position,
+  eyeOffset,
+  result
+) {
+  return SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(
+    this,
+    position,
+    eyeOffset,
+    result
+  );
+};
+// =======================================
+
 /**
  * Instantly completes an active transition.
  */
