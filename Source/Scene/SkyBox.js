@@ -19,7 +19,7 @@ import SkyBoxFS from "../Shaders/SkyBoxFS.js";
 import SkyBoxVS from "../Shaders/SkyBoxVS.js";
 import BlendingState from "./BlendingState.js";
 import SceneMode from "./SceneMode.js";
-// added by ray 20201015 : 近地天空盒
+// added by ray 20201015 : 自定义天空盒
 import Transforms from "../Core/Transforms";
 import Matrix3 from "../Core/Matrix3";
 // =================================
@@ -66,8 +66,8 @@ function SkyBox(options) {
    */
   this.sources = options.sources;
   this._sources = undefined;
-  // added by ray 20201015 : 近地天空盒
-  this.nearGround = options.nearGround;
+  // added by ray 20201015 : 自定义天空盒
+  this.custom = options.custom;
   // =================================
 
   /**
@@ -173,9 +173,9 @@ SkyBox.prototype.update = function (frameState, useHdr) {
       u_cubeMap: function () {
         return that._cubeMap;
       },
-      // added by ray 20201015 : 近地天空盒
+      // added by ray 20201015 : 自定义天空盒
       u_rotateMatrix: function () {
-        return that.nearGround
+        return that.custom
           ? ((command.modelMatrix = Transforms.eastNorthUpToFixedFrame(
               frameState.camera._positionWC
             )),
