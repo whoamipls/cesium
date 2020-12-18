@@ -1,0 +1,163 @@
+<!--
+ * @Author: your name
+ * @Date: 2020-10-15 11:34:19
+ * @LastEditTime: 2020-12-18 18:14:24
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \Apps\HelloWorld.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<!-- Use correct character set. -->
+	<meta charset="utf-8" />
+	<!-- Tell IE to use the latest, best version. -->
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+	<title>flood</title>
+	<script src="../Build/Cesium/Cesium.js"></script>
+	<script src="js/DrawPolylineCtrl.js"></script>
+	<script src="js/DistanceCtrl.js"></script>
+	<style>
+		@import url(../Build/Cesium/Widgets/widgets.css);
+
+		html,
+		body,
+		#cesiumContainer {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<input type="button" value="删除" onclick="delctrl()" style="position: absolute;left:10px;top:10px;z-index:1;"></input>
+	<div id="cesiumContainer" onclick="mapclick()"></div>
+	<script>
+		function changeLinePrimitive(options) {
+			let { semiMajorAxis, semiMinorAxis, extrudedHeight, position } = options
+			this.semiMajorAxis = semiMajorAxis
+			this.semiMinorAxis = semiMinorAxis
+			this.extrudedHeight = extrudedHeight
+			this.position = position
+		}
+		changeLinePrimitive.prototype.getGeometry = function () {
+			return new Cesium.EllipseGeometry({
+				center: this.position,
+				semiMajorAxis: this.semiMajorAxis,
+				semiMinorAxis: this.semiMinorAxis,
+				extrudedHeight: this.extrudedHeight,
+			});
+		};
+		changeLinePrimitive.prototype.update = function (context, frameState, commandList) {
+			var geometry = this.getGeometry();
+			if (!geometry) {
+				return;
+			}
+			// this._primitive = new Cesium.Primitive({
+			// 	geometryInstances: new Cesium.GeometryInstance({
+			// 		geometry: geometry,
+			// 	}),
+			// 	releaseGeometryInstances: false,
+			// 	appearance: new Cesium.EllipsoidSurfaceAppearance({
+			// 		material: Cesium.Material.fromType('Stripe')
+			// 	}),
+			// 	asynchronous: false,
+			// })
+			this._primitive = new Cesium.ClassificationPrimitive({
+				geometryInstances: new Cesium.GeometryInstance({
+					geometry: geometry,
+					attributes: {
+						color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.3)),
+						show: new Cesium.ShowGeometryInstanceAttribute(true), //设置初始化后是否显示
+					},
+				}),
+				classificationType: Cesium.ClassificationType.TERRAIN,//只绘制在3dtiles上
+				releaseGeometryInstances: false,
+				asynchronous: false,
+			})
+			var primitive = this._primitive;
+			primitive.update(context, frameState, commandList);
+		};
+	</script>
+	<script>
+		Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmNDRmOTdiMS1mNWQ1LTQ0MTctYWRhMC0zNGZjZjk1NjgzNmQiLCJpZCI6MTAxNjYsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1NTU4MTQ0NjN9.ejboCzDUFnHQ1Jx7EIKzw8KnxM9ZUC0-W_lcWldREOs";
+		var viewer = new Cesium.Viewer("cesiumContainer", {
+			terrainProvider: new Cesium.CesiumTerrainProvider({
+				url: "http://127.0.0.1/develop/tm/ref/cesium-1.74-source/Apps/assets/terrain"
+			}),
+			selectionIndicator: false
+		});
+		viewer.scene.globe.depthTestAgainstTerrain = true;
+		// 定位
+		var lng = 115.5, lat = 39.5;
+		viewer.camera.setView({
+			destination: Cesium.Cartesian3.fromDegrees(lng, lat, 300),
+			orientation: {
+				heading: Cesium.Math.toRadians(0),
+				pitch: Cesium.Math.toRadians(-15.0),
+				roll: 0.0
+			}
+		});
+		// 抗锯齿
+		if (Cesium.FeatureDetection.supportsImageRenderingPixelated()) {//判断是否支持图像渲染像素化处理
+			viewer.resolutionScale = window.devicePixelRatio;
+		}
+		viewer.scene.fxaa = true;
+		viewer.scene.postProcessStages.fxaa.enabled = true;
+		// 淹没
+		var dimensions = new Cesium.Cartesian3(3000.0, 3000.0, 1000.0);
+		let center = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
+		let modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+		modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+			Cesium.Transforms.eastNorthUpToFixedFrame(center),
+			new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5), new Cesium.Matrix4()
+		);
+		// box
+		var box = Cesium.BoxGeometry.fromDimensions({
+			vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+			dimensions: dimensions,
+		});
+		// ellipse
+		var ellipse = new Cesium.EllipseGeometry({
+			center: center,
+			semiMajorAxis: 1000.0,
+			semiMinorAxis: 1000.0,
+			extrudedHeight: 1000.0,
+		})
+		// var primitive = viewer.scene.primitives.add(
+		// 	new Cesium.ClassificationPrimitive({
+		// 		geometryInstances: new Cesium.GeometryInstance({
+		// 			geometry: ellipse,
+		// 			// modelMatrix: modelMatrix,
+		// 			attributes: {
+		// 				color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5)),
+		// 				show: new Cesium.ShowGeometryInstanceAttribute(true), //设置初始化后是否显示
+		// 			},
+		// 			id: "BoxClassificationPrimitive1",
+		// 		}),
+		// 		classificationType: Cesium.ClassificationType.TERRAIN,//只绘制在3dtiles上
+		// 	})
+		// );
+		var pr = new changeLinePrimitive({
+			semiMajorAxis: 1000.0,
+			semiMinorAxis: 1000.0,
+			extrudedHeight: 300.0,
+			position: center,
+		})
+		viewer.scene.primitives.add(pr);
+
+		setInterval(() => {
+			pr.extrudedHeight += 2;
+		}, 100);
+		function mapclick() {
+		}
+	</script>
+</body>
+
+</html>
