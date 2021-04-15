@@ -10,7 +10,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
@@ -235,12 +235,11 @@ function initialize(pointCloud, options) {
   var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableString = getStringFromTypedArray(
+  var featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJsonByteLength
   );
-  var featureTableJson = JSON.parse(featureTableString);
   byteOffset += featureTableJsonByteLength;
 
   var featureTableBinary = new Uint8Array(
@@ -255,12 +254,11 @@ function initialize(pointCloud, options) {
   var batchTableBinary;
   if (batchTableJsonByteLength > 0) {
     // Has a batch table JSON
-    var batchTableString = getStringFromTypedArray(
+    batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       batchTableJsonByteLength
     );
-    batchTableJson = JSON.parse(batchTableString);
     byteOffset += batchTableJsonByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -834,20 +832,25 @@ function createResources(pointCloud, frameState) {
     },
   };
 
-  if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
-    opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
-    opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
-  }
-
-  pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
-
-  pointCloud._translucentRenderState = RenderState.fromCache({
+  var translucentRenderState = {
     depthTest: {
       enabled: true,
     },
     depthMask: false,
     blending: BlendingState.ALPHA_BLEND,
-  });
+  };
+
+  if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
+    opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+    translucentRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    translucentRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
+  pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
+  pointCloud._translucentRenderState = RenderState.fromCache(
+    translucentRenderState
+  );
 
   pointCloud._drawCommand = new DrawCommand({
     boundingVolume: new BoundingSphere(),
