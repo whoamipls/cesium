@@ -153,7 +153,12 @@ function updateFrustums(view, scene, near, far) {
     // The multifrustum for 3D/CV is non-uniformly distributed.
     numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
   }
-
+  // added by ray 20210417 : 解决错误 RangeError: Invalid array length
+  if (isNaN(numFrustums)) {
+    // console.error('error in updateFrustums in View.js');
+    return;
+  }
+  // ============= added_end ===============
   var frustumCommandsList = view.frustumCommandsList;
   frustumCommandsList.length = numFrustums;
   for (var m = 0; m < numFrustums; ++m) {
@@ -299,8 +304,14 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
       var commandFar;
 
       var boundingVolume = command.boundingVolume;
-      if (defined(boundingVolume)) {
+      // modified by ray 20210416 : 解决错误 RangeError: Invalid array length
+      // ============== old_code ===============
+      // if (defined(boundingVolume)) {
+      // ============== new_code ===============
+      if (defined(boundingVolume) && !isNaN(boundingVolume.radius)) {
+        // ============= modify_end ==============
         if (!scene.isVisible(command, cullingVolume, occluder)) {
+          // console.error('error in insertIntoBin in View.js');
           continue;
         }
 

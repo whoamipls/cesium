@@ -105,6 +105,13 @@ var implementation;
  * });
  */
 function buildModuleUrl(relativeUrl) {
+  // added by ray 20201010 : 满足msp特定资源路径加载
+  try {
+    if (window.cesiumAssetsPrefix) {
+      return window.cesiumAssetsPrefix + relativeUrl;
+    }
+  } catch {}
+  // =======================================
   if (!defined(implementation)) {
     //select implementation
     if (
